@@ -29,7 +29,10 @@ class TicTacToe:
 
         :return: the list of moves (as tuples) that are legal to play for the current player
         """
-        return list(zip(*np.where(self.state == self.no_player_value)))
+        if self.winner() == self.no_player_value:
+            return list(zip(*np.where(self.state == self.no_player_value)))
+        else:
+            return []
 
     def winner(self):
         """
@@ -88,7 +91,7 @@ if __name__ == "__main__":
     # plays a game and displays the board at each move
     board = TicTacToe(size=3, save_history=True)
     board.display()
-    while board.winner() == 0 and len(board.legal_plays()) > 0:
+    while len(board.legal_plays()) > 0:
         board.play()
         print('-'*6)
         print("ROUND NUMBER {}".format(len(board.history) - 1))
