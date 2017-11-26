@@ -7,10 +7,10 @@ class TicTacToe:
     https://en.wikipedia.org/wiki/Tic-tac-toe
     """
 
-    def __init__(self, board_size=3):
+    def __init__(self, size=3):
         # board parameters and data
-        self.size = board_size
-        self.state = np.zeros((board_size, board_size), dtype=int)
+        self.size = size
+        self.state = np.zeros((size, size), dtype=int)
         self.history = [self.state.copy()]   # copy() needed to avoid appending a reference
         # players parameters
         self.no_player_value = 0
@@ -81,7 +81,7 @@ class TicTacToe:
 
 if __name__ == "__main__":
     # plays a game and displays the board at each move
-    board = TicTacToe(board_size=3)
+    board = TicTacToe(size=3)
     board.display()
     while board.winner() == 0 and len(board.legal_plays()) > 0:
         board.play()
