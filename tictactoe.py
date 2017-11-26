@@ -57,7 +57,7 @@ class TicTacToe:
                                   (player2_display if e == self.player2_value else no_player_display)
                                   for e in l) for l in self.history[state_number]]))
 
-    def play(self):
+    def play(self, move=None):
         """
         Plays one of the legal plays randomly
 
@@ -65,8 +65,14 @@ class TicTacToe:
         """
         # get all legal plays
         legal_plays = self.legal_plays()
-        # select a move randomly
-        selected_move = legal_plays[np.random.choice(len(legal_plays), 1)[0]]
+        if move is not None:
+            if move in legal_plays:
+                selected_move = move
+            else:
+                raise ValueError('Selected move is illegal')
+        else:
+            # select a move randomly
+            selected_move = legal_plays[np.random.choice(len(legal_plays), 1)[0]]
         # updates states and players info
         self.state[selected_move] = self.current_player_value
         self.history.append(self.state.copy())   # copy() needed to avoid appending a reference
