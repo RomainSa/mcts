@@ -12,10 +12,7 @@ class TicTacToe:
         self.size = size
         self.state = np.zeros((size, size), dtype=int)
         self.save_history = save_history
-        if self.save_history:
-            self.history = [self.state.copy()]   # copy() needed to avoid appending a reference
-        else:
-            self.history = None
+        self.history = [self.state.copy()]   # copy() needed to avoid appending a reference
         # players parameters
         self.no_player_value = 0
         self.player1_value = 1
@@ -84,6 +81,8 @@ class TicTacToe:
         self.state[selected_move] = self.current_player_value
         if self.save_history:
             self.history.append(self.state.copy())   # copy() needed to avoid appending a reference
+        else:
+            self.history = [self.state.copy()]   # only the current state is save (to be able to display it)
         self.current_player_value *= -1
 
 
@@ -91,9 +90,11 @@ if __name__ == "__main__":
     # plays a game and displays the board at each move
     board = TicTacToe(size=3, save_history=True)
     board.display()
+    round = 0
     while len(board.legal_plays()) > 0:
         board.play()
         print('-'*6)
-        print("ROUND NUMBER {}".format(len(board.history) - 1))
+        round += 1
+        print("ROUND NUMBER {}".format(round))
         board.display()
     print("WINNER: {}".format(board.winner()))
