@@ -90,11 +90,11 @@ if __name__ == "__main__":
     # plays a game and displays the board at each move
     board = TicTacToe(size=3, save_history=True)
     board.display()
-    round = 0
+    n_round = 0
     while len(board.legal_plays()) > 0:
         board.play()
         print('-'*6)
-        round += 1
+        n_round += 1
         print("ROUND NUMBER {}".format(round))
         board.display()
     print("WINNER: {}".format(board.winner()))
