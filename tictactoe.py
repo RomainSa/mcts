@@ -13,6 +13,7 @@ class TicTacToe:
         self.state = np.zeros((size, size), dtype=int)
         self.save_history = save_history
         self.history = [self.state.copy()]   # copy() needed to avoid appending a reference
+        self.last_play = None
         # players parameters
         self.no_player_value = 0
         self.player1_value = 1
@@ -84,6 +85,7 @@ class TicTacToe:
         else:
             self.history = [self.state.copy()]   # only the current state is save (to be able to display it)
         self.current_player_value *= -1
+        self.last_play = selected_move
 
 
 if __name__ == "__main__":
