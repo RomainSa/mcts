@@ -8,7 +8,6 @@ import logging
 
 
 class MonteCarloTreeSearch:
-
     """
     Implementation of the Monte Carlo Tree Search algorithm
     Based on http://mcts.ai/pubs/mcts-survey-master.pdf
@@ -30,22 +29,18 @@ class MonteCarloTreeSearch:
         # if parent still has unexplored children we expand one of them by selecting the parent node
         if len(parent.board.legal_plays()) > len(parent.children):
             return parent
-        # else we return children with the best UCB1 score
+        # else we return node with the highest UCB1 score
         else:
             # filter out nodes that can not be expanded
             nodes = [node for node in PreOrderIter(self.root)
                      if len(node.board.legal_plays()) > 0 and node.name != self.root.name
                      and len(node.board.legal_plays()) > len(node.children)]
             if method == 'ucb1':
-                # total number of plays
-                total_plays = 0
-                for node in nodes:
-                    total_plays += node.n_plays
                 # UCB1 scores
                 scores = []
                 for node in nodes:
-                    score = node.n_wins / max(node.n_plays, 1) + np.sqrt(
-                        2 * np.log(max(total_plays, 1)) / max(node.n_plays, 1))
+                    score = node.n_wins / max(node.n_plays, 1) +\
+                            3 * np.sqrt(2 * np.log(max(node.parent.n_plays, 1)) / max(node.n_plays, 1))
                     score += np.random.rand() * 1e-6  # small random perturbation to avoid ties
                     scores.append(score)
             elif method == 'thompson':
@@ -130,9 +125,12 @@ class MonteCarloTreeSearch:
         i, starting_time, ending_time = 0, time.time(), time.time() + max_runtime
         node = self.root
         while i < max_iterations and time.time() < ending_time:
-            logging.debug('MCTS Iteration {}'.format(i+1))
+            logging.info('\n[MCTS] Iteration {}'.format(i+1))
+            logging.info('[MCTS] current parent node is {}'.format(node.name))
             node = self.select(parent=node)
+            logging.info('[MCTS] selected child node {} to be expanded'.format(node.name))
             expanded_node = self.expand(parent=node)
+            logging.info('[MCTS] expanded node {} to {}'.format(node.name, expanded_node.name))
             n_wins = self.simulate(node=expanded_node, n_simulations=n_simulations)
             self.backpropagate(node=expanded_node, n_plays=n_simulations, n_wins=n_wins)
             i += 1
@@ -164,10 +162,10 @@ class MonteCarloTreeSearch:
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.CRITICAL)
     tree = MonteCarloTreeSearch(board_init_params={'size': 3, 'save_history': False},
                                 node_init_params={'n_plays': 0, 'n_wins': 0})
-    tree.run(max_iterations=1000, max_runtime=10, n_simulations=1)
+    tree.run(max_iterations=10000, max_runtime=20, n_simulations=1)
     print([(n.n_wins, n.n_plays) for n in list(LevelOrderGroupIter(tree.root))[1]])
-    #tree.display(n_levels=1)
-    # TODO: dans le expand, on peut jouer le dernier move?
+    print([n.n_wins/ n.n_plays for n in list(LevelOrderGroupIter(tree.root))[1]])
+    tree.display(n_levels=1)
