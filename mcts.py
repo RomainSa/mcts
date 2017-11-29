@@ -13,11 +13,16 @@ class MonteCarloTreeSearch:
     Based on http://mcts.ai/pubs/mcts-survey-master.pdf
     """
 
-    def __init__(self, board_init_params, node_init_params, **kwargs):
+    def __init__(self, node_init_params, board_init_params=None, board_initialisation=None, **kwargs):
         self.__dict__.update(kwargs)
-        self.board_init_params = board_init_params
         self.node_init_params = node_init_params
-        self.root = Node('0', board=Board(**board_init_params), **node_init_params)
+        if board_initialisation is not None:
+            self.board_init_params = {'size': board_initialisation.size,
+                                      'save_history': board_initialisation.save_history}
+            self.root = Node('0', board=board_initialisation, **node_init_params)
+        else:
+            self.board_init_params = board_init_params
+            self.root = Node('0', board=Board(**board_init_params), **node_init_params)
 
     def select(self, parent, method='ucb1'):
         """
@@ -35,24 +40,29 @@ class MonteCarloTreeSearch:
             nodes = [node for node in PreOrderIter(self.root)
                      if len(node.board.legal_plays()) > 0 and node.name != self.root.name
                      and len(node.board.legal_plays()) > len(node.children)]
-            if method == 'ucb1':
-                # UCB1 scores
-                scores = []
-                for node in nodes:
-                    score = node.n_wins / max(node.n_plays, 1) +\
-                            3 * np.sqrt(2 * np.log(max(node.parent.n_plays, 1)) / max(node.n_plays, 1))
-                    score += np.random.rand() * 1e-6  # small random perturbation to avoid ties
-                    scores.append(score)
-            elif method == 'thompson':
-                successes = [node.n_wins+1 for node in nodes]
-                fails = [node.n_plays-node.n_wins+1 for node in nodes]
-                scores = beta.rvs(a=successes, b=fails, size=len(nodes)).tolist()
+            if len(nodes) > 0:
+                if method == 'ucb1':
+                    # UCB1 scores
+                    scores = []
+                    for node in nodes:
+                        score = node.n_wins / max(node.n_plays, 1) +\
+                                3 * np.sqrt(2 * np.log(max(node.parent.n_plays, 1)) / max(node.n_plays, 1))
+                        score += np.random.rand() * 1e-6  # small random perturbation to avoid ties
+                        scores.append(score)
+                elif method == 'thompson':
+                    successes = [node.n_wins+1 for node in nodes]
+                    fails = [node.n_plays-node.n_wins+1 for node in nodes]
+                    scores = beta.rvs(a=successes, b=fails, size=len(nodes)).tolist()
+                else:
+                    raise ValueError('Unknown method')
+                best = nodes[np.argmax(scores)]
+                # return node with highest score
+                logging.debug('Chosen node: {}'.format(nodes[np.argmax(scores)].name))
+                return best
             else:
-                raise ValueError('Unknown method')
-            best = nodes[np.argmax(scores)]
-            # return node with highest score
-            logging.debug('Chosen node: {}'.format(nodes[np.argmax(scores)].name))
-            return best
+                # if all nodes have been explored randomly select one (can happen at end of tree search)
+                random_node = np.random.choice(list(PreOrderIter(self.root)), 1)[0]
+                return random_node
 
     def expand(self, parent):
         """
@@ -63,15 +73,19 @@ class MonteCarloTreeSearch:
         # filter out plays that already have been expanded
         already_played_moves = [node.board.last_play for node in parent.children]
         unexplored_plays = [play for play in parent.board.legal_plays() if play not in already_played_moves]
-        # choose one play randomly
-        selected_play = unexplored_plays[np.random.choice(len(unexplored_plays), 1)[0]]
-        # create a new node where this play is performed
-        child_board = deepcopy(parent.board)
-        child_board.play(selected_play)
-        child_name = parent.name + '_' + str(len(parent.children))
-        child = Node(name=child_name, parent=parent, board=child_board, **self.node_init_params)
-        logging.debug('EXPANDING play {} from node {} to new child {}'.format(selected_play, parent.name, child.name))
-        return child
+        if len(unexplored_plays) > 0:
+            # choose one play randomly
+            selected_play = unexplored_plays[np.random.choice(len(unexplored_plays), 1)[0]]
+            # create a new node where this play is performed
+            child_board = deepcopy(parent.board)
+            child_board.play(selected_play)
+            child_name = parent.name + '_' + str(len(parent.children))
+            child = Node(name=child_name, parent=parent, board=child_board, **self.node_init_params)
+            logging.debug('EXPANDING play {} from node {} to new child {}'.format(selected_play, parent.name, child.name))
+            return child
+        else:
+            # if all nodes have been explored return parent without expanding (can happen at end of tree search)
+            return parent
 
     def simulate(self, node, n_simulations):
         """
@@ -114,7 +128,7 @@ class MonteCarloTreeSearch:
                 ancestor.n_wins += (n_plays-n_wins)
                 logging.debug('BACKPROPAGATED {} wins to node {}'.format((n_plays-n_wins), ancestor.board.last_play))
 
-    def run(self, max_iterations, max_runtime, n_simulations=1):
+    def search(self, max_iterations, max_runtime, n_simulations=1):
         """
         Run a Monte Carlo Tree Search starting from root node
 
@@ -154,6 +168,6 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.CRITICAL)
     tree = MonteCarloTreeSearch(board_init_params={'size': 3, 'save_history': False},
                                 node_init_params={'n_plays': 0, 'n_wins': 0})
-    tree.run(max_iterations=10000, max_runtime=20, n_simulations=1)
+    tree.search(max_iterations=10000, max_runtime=20, n_simulations=1)
     print([(n.n_wins, n.n_plays) for n in list(LevelOrderGroupIter(tree.root))[1]])
-    print([n.n_wins/ n.n_plays for n in list(LevelOrderGroupIter(tree.root))[1]])
+    print([n.n_wins / n.n_plays for n in list(LevelOrderGroupIter(tree.root))[1]])
