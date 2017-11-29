@@ -136,6 +136,19 @@ class MonteCarloTreeSearch:
             i += 1
         logging.info('Performed {} iterations in {} seconds.'.format(i, time.time()-starting_time))
 
+    def recommended_play(self):
+        """
+        Move recommended by the Monte Carlo Tree Search
+
+        :return: tuple corresponding to the move to play
+        """
+        nodes = list(LevelOrderGroupIter(self.root))
+        if len(nodes) > 0:
+            level1_nodes = nodes[1]
+            scores = [node.n_wins / node.n_plays for node in level1_nodes]
+            best_node = level1_nodes[np.argmax(scores)]
+            return best_node.board.last_play
+
     def display(self, n_levels):
         """
         Print the tree and each state probability of play
