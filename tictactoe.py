@@ -49,7 +49,7 @@ class TicTacToe:
         else:
             return self.no_player_value
 
-    def display(self, state_number=-1):
+    def display(self, state_number=-1, return_string=False):
         """
         Display the game board
 
@@ -58,9 +58,13 @@ class TicTacToe:
         no_player_display = '.'
         player1_display = 'O'
         player2_display = 'X'
-        print('\n'.join(['|'.join(player1_display if e == self.player1_value else
+        board_representation = '\n'.join(['|'.join(player1_display if e == self.player1_value else
                                   (player2_display if e == self.player2_value else no_player_display)
-                                  for e in l) for l in self.history[state_number]]))
+                                  for e in l) for l in self.history[state_number]])
+        if return_string:
+            return board_representation
+        else:
+            print(board_representation)
 
     def play(self, move=None):
         """
