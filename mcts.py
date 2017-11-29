@@ -149,30 +149,6 @@ class MonteCarloTreeSearch:
             best_node = level1_nodes[np.argmax(scores)]
             return best_node.board.last_play
 
-    def display(self, n_levels):
-        """
-        Print the tree and each state probability of play
-
-        :return:
-        """
-        for i, level_nodes in enumerate(list(LevelOrderGroupIter(self.root))[1:(n_levels+1)]):
-            print('ITERATION {}'.format(i))
-            scores = [node.n_wins / max(node.n_plays, 1) for node in level_nodes]
-            best_move = level_nodes[np.argmax(scores)]
-            print('best score: {}'.format(best_move.n_wins / max(best_move.n_plays, 1)))
-            print(best_move.board.display())
-
-    def display_all(self):
-        """
-        Print the whole tree with probability of play
-
-        :return:
-        """
-        for i, level_nodes in enumerate(LevelOrderGroupIter(self.root)):
-            print('ITERATION {}'.format(i))
-            for node in level_nodes:
-                print("NODE {} has {} WINS and {} PLAYS.".format(node.name, node.n_wins, node.n_plays))
-
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.CRITICAL)
@@ -181,4 +157,3 @@ if __name__ == "__main__":
     tree.run(max_iterations=10000, max_runtime=20, n_simulations=1)
     print([(n.n_wins, n.n_plays) for n in list(LevelOrderGroupIter(tree.root))[1]])
     print([n.n_wins/ n.n_plays for n in list(LevelOrderGroupIter(tree.root))[1]])
-    tree.display(n_levels=1)
