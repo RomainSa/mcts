@@ -108,7 +108,7 @@ class MonteCarloTreeSearch:
         n_wins = 0
         for _ in range(n_simulations):
             board = deepcopy(node.board)
-            player = board.current_player_value
+            player = board.current_player.value
             logging.debug('-SIMULATE- from state\n%s\n with player %s', board.display(return_string=True), player)
             while board.legal_plays():
                 board.play()
@@ -133,7 +133,7 @@ class MonteCarloTreeSearch:
             ancestor.n_plays += n_plays
             logging.debug('-BACKPROPAGATED- %s plays to ancestor node %s', n_plays, ancestor.name)
             # depending on the player the number of wins is not the same
-            if node.board.current_player_value == ancestor.board.current_player_value:
+            if node.board.current_player.value == ancestor.board.current_player.value:
                 ancestor.n_wins += n_wins
                 logging.debug('-BACKPROPAGATED- %s wins to same player ancestor node %s', n_wins, ancestor.name)
             else:
