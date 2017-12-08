@@ -13,8 +13,7 @@ def main():
     Run an interactive game with MCTS advice
     """
     logging.basicConfig(level=logging.CRITICAL)
-    board_size = 3
-    board = Board(size=board_size)
+    board = Board(size=3)
     # print init version of board
     board.display()
     while board.legal_plays():
@@ -32,12 +31,14 @@ def main():
             board.play()
         print('Opponent played:')
         board.display()
-    if board.winner() == 1:
+    if board.winner() is None:
+        print("It's a tie! :|")
+    elif board.winner().value == 1:
         print("You win! :)")
-    elif board.winner() == -1:
+    elif board.winner().value == -1:
         print("You lose! :(")
     else:
-        print("It's a tie! :|")
+        raise ValueError('Unknown game status')
 
 
 if __name__ == "__main__":
