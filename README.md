@@ -6,4 +6,5 @@ Environment setup:
 virtualenv -p /usr/bin/python3 mcts_interpreter
 source mcts_interpreter/bin/activate
 pip install --upgrade pip
+pip install -r MCTS/requirements.txt
 ```
