@@ -3,7 +3,8 @@ Launching a game and playing against computer
 """
 
 import logging
-from tictactoe import TicTacToe as Board
+
+from games.tictactoe import Board as Board
 from mcts import MonteCarloTreeSearch
 
 

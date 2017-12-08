@@ -3,12 +3,14 @@ Monte Carlo Tree Search implementation
 """
 
 import logging
-from copy import deepcopy
 import time
+from copy import deepcopy
+
 import numpy as np
-from scipy.stats import beta
 from anytree import Node, PreOrderIter, LevelOrderGroupIter
-from tictactoe import TicTacToe as Board
+from scipy.stats import beta
+
+from games.tictactoe import Board
 
 
 class MonteCarloTreeSearch:
