@@ -7,7 +7,7 @@ import time
 from copy import deepcopy
 
 import numpy as np
-from anytree import Node, PreOrderIter, LevelOrderGroupIter
+from anytree import Node, LevelOrderGroupIter, RenderTree
 from scipy.stats import beta
 
 from games.tictactoe import Board
@@ -30,47 +30,50 @@ class MonteCarloTreeSearch:
             self.board_init_params = board_init_params
             self.root = Node('0', board=Board(**board_init_params), **node_init_params)
 
-    def select(self, parent, method='ucb1'):
+    def select(self, method='ucb1'):
         """
         Select a node of the tree based on UCB1 confidence bounds scores or expand current one if not all children
         have been visited
 
         :return: Node with best score
         """
-        # if parent still has unexplored children we expand one of them by selecting the parent node
-        if len(parent.board.legal_plays()) > len(parent.children):
-            logging.debug('-SELECT- chose parent node: %s', parent.name)
-            return parent
-        # else we return node with the highest UCB1 score
-        else:
-            # filter out terminal nodes, root node and nodes that can not be expanded
-            nodes = [node for node in PreOrderIter(self.root)
-                     if node.board.legal_plays() and node.name != self.root.name
-                     and len(node.board.legal_plays()) > len(node.children)]
-            if nodes:
+        def ucb(node):
+            # UCB1 score
+            score = node.n_wins / max(node.n_plays, 1)\
+                    + 0.5 * np.sqrt(np.log(max(node.parent.n_plays, 1)) / max(node.n_plays, 1))
+            score = min(score, 1.0)
+            score += np.random.rand() * 1e-6  # small random perturbation to avoid ties
+            return score
+
+        def thompson(node):
+            # Thompson sampling score
+            return beta.rvs(a=node.n_wins+1, b=node.n_plays-node.n_wins+1, size=1)[0]
+
+        # selection start from root node
+        node = self.root
+
+        # we then go down the tree
+        while node.children:
+            if len(node.board.legal_plays()) > len(node.children):
+                # if node still has unexplored children we select it
+                logging.debug('-SELECT- chose node: %s that was not completely expanded', node.name)
+                return node
+            else:
+                # we go down the tree until we reach the bottom always choosing the best score at each level
+                nodes = node.children
                 if method == 'ucb1':
-                    # UCB1 scores
-                    scores = []
                     for node in nodes:
-                        score = node.n_wins / max(node.n_plays, 1) + \
-                                3 * np.sqrt(2 * np.log(max(node.parent.n_plays, 1)) / max(node.n_plays, 1))
-                        score += np.random.rand() * 1e-6  # small random perturbation to avoid ties
-                        scores.append(score)
+                        node.score = ucb(node)
                 elif method == 'thompson':
-                    successes = [node.n_wins + 1 for node in nodes]
-                    fails = [node.n_plays - node.n_wins + 1 for node in nodes]
-                    scores = beta.rvs(a=successes, b=fails, size=len(nodes)).tolist()
+                    for node in nodes:
+                        node.score = thompson(node)
                 else:
                     raise ValueError('Unknown method')
-                best = nodes[np.argmax(scores)]
-                # return node with highest score
-                logging.debug('-SELECT- chose best score node: %s', nodes[np.argmax(scores)].name)
-                return best
-            else:
-                # if all nodes have been explored randomly select one (can happen at end of tree search)
-                random_node = np.random.choice(list(PreOrderIter(self.root)), 1)[0]
-                logging.debug('-SELECT- chose random node: %s', random_node.name)
-                return random_node
+                scores = [n.score for n in nodes]
+                node = nodes[np.argmax(scores)]   # node with highest score
+                logging.debug('-SELECT- chose temporary best score node: %s', node.name)
+        logging.debug('-SELECT- final choice is node: %s', node.name)
+        return node
 
     def expand(self, parent):
         """
@@ -141,33 +144,58 @@ class MonteCarloTreeSearch:
                 logging.debug('-BACKPROPAGATED- %s wins to different player ancestor node %s', n_plays - n_wins,
                               ancestor.name)
 
-    def search(self, max_iterations, max_runtime, n_simulations=1):
+    def display(self, return_string=False):
+        """
+        Print the current state of the tree along with some statistics on nodes
+
+        :return: tree representation as a string (useful for debugging) or nothing if printed
+        """
+        def sort_by_move(nodes):
+            return sorted(nodes, key=lambda n: n.board.last_play)
+
+        result = ['\n']
+        for p, _, n_ in RenderTree(self.root, childiter=sort_by_move):
+            result.append(('%s%s | Player %s turn | %s wins in %s plays | score: %.3f' % (p,
+                                                                                          n_.board.last_play,
+                                                                                          n_.board.current_player.display,
+                                                                                          n_.n_wins, n_.n_plays,
+                                                                                          n_.score)))
+        result = '\n'.join(result)
+        if return_string:
+            return result
+        print(result)
+
+    def search(self, max_iterations, max_runtime, n_simulations=1, display_tree=False):
         """
         Run a Monte Carlo Tree Search starting from root node
 
         :param max_iterations: max number of iterations for the tree search
         :param max_runtime: max search time in seconds
         :param n_simulations: number of simulations per expanded node
+        :param display_tree: whether or not the tree is printed at each iteration
         """
         i, starting_time, ending_time = 0, time.time(), time.time() + max_runtime
         node = self.root
         while i < max_iterations and time.time() < ending_time:
             logging.info('\n[MCTS] Iteration %s', i + 1)
             logging.info('[MCTS] current parent node is %s', node.name)
-            node = self.select(parent=node)
+            node = self.select()
             logging.info('[MCTS] selected node %s to be expanded', node.name)
             expanded_node = self.expand(parent=node)
             logging.info('[MCTS] expanded node %s to %s', node.name, expanded_node.name)
             n_wins = self.simulate(node=expanded_node, n_simulations=n_simulations)
             self.backpropagate(node=expanded_node, n_plays=n_simulations, n_wins=n_wins)
+            if display_tree:
+                self.display()
             i += 1
+            logging.info('Resulting tree: %s \n', self.display(return_string=True))
         logging.info('[MCTS] Performed %s iterations in %s seconds.', i, round(time.time() - starting_time, 2))
 
     def recommended_play(self):
         """
         Move recommended by the Monte Carlo Tree Search
 
-        :return: tuple corresponding to the move to play
+        :return: tuple corresponding to the recommended move
         """
         nodes = list(LevelOrderGroupIter(self.root))
         if nodes:
@@ -181,10 +209,10 @@ def main():
     """
     Run a Monte Carlo Tree search
     """
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     tree = MonteCarloTreeSearch(board_init_params={'size': 3, 'save_history': False},
-                                node_init_params={'n_plays': 0, 'n_wins': 0})
-    tree.search(max_iterations=15, max_runtime=10, n_simulations=1)
+                                node_init_params={'n_plays': 0, 'n_wins': 0, 'score': 0.})
+    tree.search(max_iterations=150, max_runtime=10, n_simulations=1, display_tree=False)
     print([(n.n_wins, n.n_plays) for n in list(LevelOrderGroupIter(tree.root))[1]])
     print([n.n_wins / n.n_plays for n in list(LevelOrderGroupIter(tree.root))[1]])
     print([n.board.last_play for n in list(LevelOrderGroupIter(tree.root))[1]])

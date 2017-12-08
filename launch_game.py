@@ -18,7 +18,8 @@ def main():
     board.display()
     while board.legal_plays():
         # run Monte Carlo Tree Search and show recommended move
-        tree = MonteCarloTreeSearch(board_initialisation=board, node_init_params={'n_plays': 0, 'n_wins': 0})
+        tree = MonteCarloTreeSearch(board_initialisation=board,
+                                    node_init_params={'n_plays': 0, 'n_wins': 0, 'score': 0.})
         tree.search(max_iterations=1000, max_runtime=4, n_simulations=1)
         print("MCTS recommends: {}".format(tree.recommended_play()))
         # ask user for move to play and play it
