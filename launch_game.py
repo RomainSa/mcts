@@ -4,7 +4,7 @@ Launching a game and playing against computer
 
 import logging
 
-from games.tictactoe import Board as Board
+from games.tictactoe import Game as Board
 from mcts import MonteCarloTreeSearch
 
 
@@ -13,9 +13,9 @@ def main():
     Run an interactive game with MCTS advice
     """
     logging.basicConfig(level=logging.CRITICAL)
-    board = Board(size=3)
+    board = Game(size=3)
     # print init version of board
-    board.display()
+    board.show_board()
     while board.legal_plays():
         # run Monte Carlo Tree Search and show recommended move
         tree = MonteCarloTreeSearch(board_initialisation=board,
@@ -26,12 +26,12 @@ def main():
         move = tuple([int(s) for s in input("Move to play (format: .,.) : ").split(',')])
         board.play(move)
         print('You played:')
-        board.display()
+        board.show_board()
         # a random  move is selected for opponent
         if board.legal_plays():
             board.play()
         print('Opponent played:')
-        board.display()
+        board.show_board()
     if board.winner() is None:
         print("It's a tie! :|")
     elif board.winner().value == 1:

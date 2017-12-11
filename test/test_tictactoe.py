@@ -1,20 +1,20 @@
 import unittest
 
 import numpy as np
-from games.tictactoe import Board
+from games.tictactoe import Game
 
 
 class TestTicTacToeMethods(unittest.TestCase):
 
     def setUp(self):
-        self.board = Board(size=3, save_history=True)
+        self.board = Game(board_size=3, save_history=True)
         self.board.play(move=(0, 0))
         self.board.play(move=(1, 1))
         self.board.play(move=(0, 1))
 
     def test_display(self):
         displayed_board = 'O|O|.\n.|X|.\n.|.|.'
-        self.assertEqual(self.board.display(return_string=True), displayed_board)
+        self.assertEqual(self.board.show_board(return_string=True), displayed_board)
 
     def test_state(self):
         state = np.array([[1, 1, 0], [0, -1, 0], [0, 0, 0]])
