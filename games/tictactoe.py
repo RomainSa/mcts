@@ -36,6 +36,7 @@ class Game:
         self.players = [Player(name='A', value=1, display='O'), Player(name='B', value=-1, display='X')]
         self.players_values = list([p.value for p in self.players])
         self.players_gen = cycle(self.players)
+        self.last_player = None
         self.current_player = next(self.players_gen)
 
     def legal_plays(self):
@@ -119,6 +120,7 @@ class Game:
             self.history.append(self.state.copy())  # copy() needed to avoid appending a reference
         else:
             self.history = [self.state.copy()]  # only the current state is save (to be able to display it)
+        self.last_player = self.current_player
         self.current_player = next(self.players_gen)
         self.last_play = selected_move
 
