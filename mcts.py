@@ -160,17 +160,22 @@ class MonteCarloTreeSearch:
 
         result = ['\n']
         output = '%s%s | Last move is %s | Player %s turn | %s wins and %s ties in %s plays | score: %.3f'
+
+        nodes_selections = []
+        if level > 0:
+            # from list of tuples of nodes to list of nodes
+            nodes_selections = [e for sub in list(LevelOrderGroupIter(self.root))[:level+1] for e in sub]
+
         for indent, _, node in RenderTree(self.root, childiter=sort_by_move):
-            if level > 0:
-                if node in list(LevelOrderGroupIter(self.root))[:level]:
-                    result.append((output % (indent,
-                                             node.name,
-                                             node.game.last_play,
-                                             node.game.current_player.display,
-                                             node.n_wins,
-                                             node.n_ties,
-                                             node.n_plays,
-                                             node.score)))
+            if level == -1 or node in nodes_selections:
+                result.append((output % (indent,
+                                         node.name,
+                                         node.game.last_play,
+                                         node.game.current_player.display,
+                                         node.n_wins,
+                                         node.n_ties,
+                                         node.n_plays,
+                                         node.score)))
         result = '\n'.join(result)
         if return_string:
             return result
