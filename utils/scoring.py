@@ -11,28 +11,30 @@ def average_wins(plays, wins, ties):
     :param ties: number of ties
     :return: score (min:0, max:1)
     """
-    plays = max(plays, 1)   # to avoid division by 0
-    score = wins / plays
-    return score
+    if plays == 0:
+        return 99.   # to be sure that arm is played at least once
+    else:
+        return wins / plays
 
 
-def ucb1(plays, wins, ties, total_plays, c_=0.5):
+def ucb1(plays, wins, ties, total_plays, c_=1.0):
     """
     Upper Confidence Bound score
 
     :param plays: number of times the arm has been played
     :param ties: number of ties
     :param wins: number of successes
+    :param total_plays: number of plays of all arms
     :param c_: constant (the more the larger the bound)
     :return: score (min:0, max:1)
     """
-    plays = max(plays, 1)   # to avoid division by 0
-    total_plays = max(total_plays, 1)
-
-    score = wins / plays + c_ * np.sqrt(np.log(total_plays) / plays)
-    score = min(score, 1.0)
-    score += np.random.rand() * 1e-6  # small random perturbation to avoid ties
-    return score
+    if plays == 0:
+        return 99.   # to be sure that arm is played at least once
+    else:
+        score = wins / plays + c_ * np.sqrt(np.log(total_plays) / plays)
+        score = min(score, 1.0)
+        score += np.random.rand() * 1e-6  # small random perturbation to avoid ties
+        return score
 
 
 def thompson(plays, wins, ties):
@@ -44,5 +46,7 @@ def thompson(plays, wins, ties):
     :param ties: number of ties
     :return: score (min:0, max:1)
     """
-    score = beta.rvs(a=wins+1, b=plays-wins+1, size=1)[0]
-    return score
+    if plays == 0:
+        return 99.   # to be sure that arm is played at least once
+    else:
+        return beta.rvs(a=wins+1, b=plays-wins+1, size=1)[0]
