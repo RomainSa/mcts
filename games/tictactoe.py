@@ -25,7 +25,7 @@ class Game:
     """
 
     def __init__(self, board_size=3, save_history=True):
-        # board attributes
+        # game attributes
         self.board_size = board_size
         self.state = np.zeros((board_size, board_size), dtype=int)
         self.save_history = save_history
@@ -73,7 +73,7 @@ class Game:
         :param return_string: whether to return a string or to print it
         :return: board representation as a string or nothing
         """
-        # creates the string representation of the board
+        # creates the string representation of the game
         lines = []
         no_player_display = '.'
         for line in self.history[state_number]:
