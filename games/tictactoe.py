@@ -17,6 +17,12 @@ class Player:
         self.value = value
         self.display = display
 
+    def __eq__(self, other):
+        """ Two players are equal if they have the same value"""
+        if isinstance(self, other.__class__):
+            return self.value == other.value
+        return False
+
 
 class Game:
     """
