@@ -138,7 +138,7 @@ class MonteCarloTreeSearch:
                 logging.debug('-BACKPROPAGATED- %s wins to same player ancestor node %s', n_wins, ancestor.name)
             else:
                 ancestor.n_wins += (n_plays - n_ties - n_wins)
-                logging.debug('-BACKPROPAGATED- %s wins to different player ancestor node %s', n_plays - n_wins,
+                logging.debug('-BACKPROPAGATED- %s wins to different player ancestor node {}', n_plays-n_ties-n_wins,
                               ancestor.name)
 
     def show_tree(self, return_string=False, level=-1):
