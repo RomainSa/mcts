@@ -141,11 +141,12 @@ class MonteCarloTreeSearch:
                 logging.debug('-BACKPROPAGATED- %s wins to different player ancestor node %s', n_plays - n_wins,
                               ancestor.name)
 
-    def show_tree(self, return_string=False):
+    def show_tree(self, return_string=False, level=-1):
         """
         Print the current state of the tree along with some statistics on nodes
 
         :param return_string: boolean whether to return a string or to print the tree
+        :param level: max level to print. If -1 print full tree
         :return: tree representation as a string or nothing if printed
         """
         def sort_by_move(nodes):
@@ -158,16 +159,18 @@ class MonteCarloTreeSearch:
             return sorted(nodes, key=lambda n: n.game.last_play)
 
         result = ['\n']
+        output = '%s%s | Last move is %s | Player %s turn | %s wins and %s ties in %s plays | score: %.3f'
         for indent, _, node in RenderTree(self.root, childiter=sort_by_move):
-            output = '%s%s | Last move is %s | Player %s turn | %s wins and %s ties in %s plays | score: %.3f'
-            result.append((output % (indent,
-                                     node.name,
-                                     node.game.last_play,
-                                     node.game.current_player.display,
-                                     node.n_wins,
-                                     node.n_ties,
-                                     node.n_plays,
-                                     node.score)))
+            if level > 0:
+                if node in list(LevelOrderGroupIter(self.root))[:level]:
+                    result.append((output % (indent,
+                                             node.name,
+                                             node.game.last_play,
+                                             node.game.current_player.display,
+                                             node.n_wins,
+                                             node.n_ties,
+                                             node.n_plays,
+                                             node.score)))
         result = '\n'.join(result)
         if return_string:
             return result
