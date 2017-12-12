@@ -4,7 +4,7 @@ Launching a game and playing against computer
 
 import logging
 
-from games.tictactoe import Game as Board
+from games.tictactoe import Game
 from mcts import MonteCarloTreeSearch
 
 
@@ -13,30 +13,29 @@ def main():
     Run an interactive game with MCTS advice
     """
     logging.basicConfig(level=logging.CRITICAL)
-    board = Game(size=3)
-    # print init version of board
-    board.show_board()
-    while board.legal_plays():
+    game = Game(board_size=3)
+    # print init version of game
+    game.show_board()
+    while game.legal_plays():
         # run Monte Carlo Tree Search and show recommended move
-        tree = MonteCarloTreeSearch(board_initialisation=board,
-                                    node_init_params={'n_plays': 0, 'n_wins': 0, 'score': 0.})
+        tree = MonteCarloTreeSearch(game=game)
         tree.search(max_iterations=1000, max_runtime=4, n_simulations=1)
         print("MCTS recommends: {}".format(tree.recommended_play()))
         # ask user for move to play and play it
         move = tuple([int(s) for s in input("Move to play (format: .,.) : ").split(',')])
-        board.play(move)
+        game.play(move)
         print('You played:')
-        board.show_board()
+        game.show_board()
         # a random  move is selected for opponent
-        if board.legal_plays():
-            board.play()
+        if game.legal_plays():
+            game.play()
         print('Opponent played:')
-        board.show_board()
-    if board.winner() is None:
+        game.show_board()
+    if game.winner() is None:
         print("It's a tie! :|")
-    elif board.winner().value == 1:
+    elif game.winner().value == 1:
         print("You win! :)")
-    elif board.winner().value == -1:
+    elif game.winner().value == -1:
         print("You lose! :(")
     else:
         raise ValueError('Unknown game status')
