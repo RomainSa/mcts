@@ -1,7 +1,8 @@
 import unittest
+import logging
 from copy import deepcopy
 
-from anytree import Node, PreOrderIter
+from anytree import Node, PreOrderIter, LevelOrderGroupIter
 from anytree.search import findall
 
 from mcts import MonteCarloTreeSearch
@@ -106,8 +107,8 @@ class TestMCTSMethods(unittest.TestCase):
         n_wins, _ = self.tree.simulate(node=self.tree.root, n_simulations=100)
         self.assertGreater(n_wins, 1)
 
-    def test_backpropagate(self):
-        # select a node from with backpropagation start
+    def test_backpropagate1(self):
+        # select a node from which backpropagation start
         node_name = '0_3_4_1'
         node = findall(self.tree.root, filter_=lambda n: n.name == node_name)[0]
         total_plays_before = sum([n.n_plays for n in PreOrderIter(self.tree.root)])
@@ -119,6 +120,27 @@ class TestMCTSMethods(unittest.TestCase):
 
         self.assertEquals(total_plays_after-total_plays_before, 4*100)
         self.assertGreater(total_wins_after, 1)
+
+    def test_backpropagate2(self):
+        # create fake wins and plays
+        self.update_nodes(nodes=list(PreOrderIter(self.tree.root)), n_plays=0, n_wins=0)
+
+        # select a node from which backpropagation start
+        node_name = '0_3_6'
+        node = findall(self.tree.root, filter_=lambda n: n.name == node_name)[0]
+        self.tree.backpropagate(node, n_plays=20, n_wins=6, n_ties=0)
+
+        # root node stats
+        root_plays = self.tree.root.n_plays
+        root_wins = self.tree.root.n_wins
+
+        # level 1 nodes stats
+        level1_nodes = list(LevelOrderGroupIter(self.tree.root))[1]
+        level1_plays = sum([node.n_plays for node in level1_nodes])
+        level1_wins = sum([node.n_wins for node in level1_nodes])
+
+        self.assertEquals(root_plays, level1_plays)
+        self.assertEquals(root_plays-root_wins, level1_wins)
 
     def test_recommend(self):
         # create fake wins and plays
