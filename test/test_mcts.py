@@ -140,7 +140,7 @@ class TestMCTSMethods(unittest.TestCase):
         level1_wins = sum([node.n_wins for node in level1_nodes])
 
         self.assertEquals(root_plays, level1_plays)
-        self.assertEquals(root_plays-root_wins, level1_wins)
+        self.assertEquals(root_wins, level1_wins)
 
     def test_recommend(self):
         # create fake wins and plays

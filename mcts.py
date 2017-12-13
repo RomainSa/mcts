@@ -49,7 +49,8 @@ class MonteCarloTreeSearch:
                     node_.score = scoring_func(plays=node_.n_plays,
                                                wins=node_.n_wins,
                                                ties=node_.n_ties,
-                                               total_plays=total_plays)
+                                               total_plays=total_plays,
+                                               c_=0.5)
                     scores.append(node_.score)
                 node = nodes[np.argmax(scores)]
                 logging.debug('-SELECT- chose temporary best score node: %s', node.name)
@@ -100,8 +101,7 @@ class MonteCarloTreeSearch:
                           node_player.display)
             while game.legal_plays():
                 game.play()
-            # update win stats
-            if game.winner() == node_player:
+            if game.winner() == self.root.game.current_player:  # all wins are from root point of view
                 n_wins += 1
             elif game.winner() is None:
                 n_ties += 1
@@ -127,19 +127,10 @@ class MonteCarloTreeSearch:
         # and its ancestors
         for ancestor in node.ancestors:
             ancestor.n_plays += n_plays
+            ancestor.n_wins += n_wins
             ancestor.n_ties += n_ties
-            logging.debug('-BACKPROPAGATED- %s plays (of which %s ties) to ancestor node %s',
-                          n_plays,
-                          n_ties,
-                          ancestor.name)
-            # depending on the player the number of wins is not the same
-            if node.game.current_player == ancestor.game.current_player:
-                ancestor.n_wins += n_wins
-                logging.debug('-BACKPROPAGATED- %s wins to same player ancestor node %s', n_wins, ancestor.name)
-            else:
-                ancestor.n_wins += (n_plays - n_ties - n_wins)
-                logging.debug('-BACKPROPAGATED- %s wins to different player ancestor node {}', n_plays-n_ties-n_wins,
-                              ancestor.name)
+            output = '-BACKPROPAGATED- %s plays (of which %s ties) to ancestor node %s'
+            logging.debug(output, n_plays, n_ties, ancestor.name)
 
     def show_tree(self, return_string=False, level=-1):
         """
@@ -217,7 +208,7 @@ class MonteCarloTreeSearch:
         if nodes:
             level1_nodes = nodes[1]
             scores = [scoring_func(plays=n.n_plays, wins=n.n_wins, ties=n.n_ties) for n in level1_nodes]
-            best_node = level1_nodes[np.argmin(scores)]  # argmin because it is the score of the other player (level 1)
+            best_node = level1_nodes[np.argmax(scores)]
             return best_node.game.last_play
 
 
