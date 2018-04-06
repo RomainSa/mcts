@@ -1,7 +1,6 @@
 import unittest
 
-import numpy as np
-from utils.scoring import average_wins, ucb1
+from mcts.utils.scoring import average_wins, ucb1
 
 
 class TestScoringMethods(unittest.TestCase):

@@ -1,5 +1,6 @@
 """
 Connect4 game implementation
+cf https://en.wikipedia.org/wiki/Connect_Four
 """
 
 import logging
@@ -7,42 +8,43 @@ from itertools import cycle
 
 import numpy as np
 
-
-class Player:
-    """
-    Connect4 player
-    """
-    def __init__(self, name, value, display):
-        self.name = name
-        self.value = value
-        self.display = display
-
-    def __eq__(self, other):
-        """ Two players are equal if they have the same value"""
-        if isinstance(self, other.__class__):
-            return self.value == other.value
-        return False
+from mcts.games.core.board import Board
+from mcts.games.core.game import TwoPlayersGame
 
 
-class Game:
-    """
-    Connect4 game implementation to be used by Monte Carlo Tree Search
-    https://en.wikipedia.org/wiki/Connect_Four
-    """
+class Connect4(TwoPlayersGame):
 
-    def __init__(self, board_size=(6, 7), save_history=True):
+    def __init__(self, init_state=None, save_history=True):
+        """
+        :param init_state: initial board state
+        :type init_state: np.array
+        :param save_history: whether to save game history (memory-intensive) or not
+        :type save_history: bool
+        """
+
+        # a Connect4 game has a 6x7 board
+        if init_state is not None:
+            assert init_state.shape == (6, 7)
+            if init_state.dtype != np.dtype(np.int8):
+                raise TypeError('Initial state must be of type: %s' % np.int8)
+        board = Board(shape=(6, 7), state=init_state, dtype=np.int8)
+
+        # call to Superclass constructor
+        TwoPlayersGame.__init__(self, board, players, save_history)
+
         # game attributes
-        self.board_size = board_size
-        self.state = np.zeros(board_size, dtype=int)
-        self.save_history = save_history
-        self.history = [self.state.copy()]  # copy() needed to avoid appending a reference
-        self.last_play = None
+        self.board_size = (6, 7)
+
         # players attributes
-        self.players = [Player(name='A', value=1, display='O'), Player(name='B', value=2, display='X')]
         self.players_values = list([p.value for p in self.players])
-        self.players_gen = cycle(self.players)
-        self.current_player = next(self.players_gen)
-        self.winner_ = None
+
+        # player turn to play
+        self.last_player = None if init_state is None else self._get_last_player()
+        if self.last_player is None or self.last_player == self.players[1]:
+            self.players_generator = cycle(self.players)
+        else:
+            self.players_generator = cycle(self.players[::-1])
+        self.current_player = next(self.players_generator)
 
     def legal_plays(self):
         """

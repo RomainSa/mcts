@@ -8,9 +8,9 @@ from copy import deepcopy
 
 import numpy as np
 from anytree import Node, LevelOrderGroupIter, RenderTree
-from utils.scoring import ucb1, average_wins
+from mcts.utils.scoring import ucb1, average_wins
 
-from games.tictactoe import Game
+from mcts.games.tictactoe import Game
 
 
 class MonteCarloTreeSearch:

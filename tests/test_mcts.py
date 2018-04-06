@@ -1,12 +1,11 @@
 import unittest
-import logging
 from copy import deepcopy
 
 from anytree import Node, PreOrderIter, LevelOrderGroupIter
 from anytree.search import findall
 
 from mcts import MonteCarloTreeSearch
-from games.tictactoe import Game
+from mcts.games.tictactoe import Game
 
 
 class TestMCTSMethods(unittest.TestCase):

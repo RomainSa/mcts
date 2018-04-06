@@ -1,13 +1,13 @@
 import unittest
 
 import numpy as np
-from games.connect4 import Game
+from mcts.games.connect4 import TwoPlayersGame
 
 
 class TestConnect4Methods(unittest.TestCase):
 
     def setUp(self):
-        self.game = Game(board_size=(6, 7), save_history=True)
+        self.game = TwoPlayersGame(board_size=(6, 7), save_history=True)
         moves = [3, 1, 3, 2, 5, 4, 4, 2, 2, 3, 4]
         for move in moves:
             self.game.play(move=move)

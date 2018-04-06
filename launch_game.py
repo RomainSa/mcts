@@ -4,7 +4,7 @@ Launching a game and playing against computer
 
 import logging
 
-from games.tictactoe import Game
+from mcts.games.tictactoe import Game
 from mcts import MonteCarloTreeSearch
 
 
